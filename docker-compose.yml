@@ -1,0 +1,53 @@
+version: '3.7'
+services:
+  app:
+      build:
+        context: ./
+        dockerfile: Dockerfile
+      image: gdd/laravel
+      container_name: myapp
+      restart: unless-stopped
+      tty: true
+      environment:
+        SERVICE_NAME: myapp
+        SERVICE_TAGS: dev
+      working_dir: /var/www/html
+      volumes:
+        - ./:/var/www/html
+      networks:
+        - mynet
+
+  db:
+      image: postgres
+      restart: always
+      tty: true
+      ports:
+        - "5432:5432"
+      environment:
+        POSTGRES_USER: postgres
+        POSTGRES_DB: TaskManagement
+        POSTGRES_PASSWORD: root
+        PGDATA: /var/lib/postgresql/data/pgdata
+        POSTGRES_HOST_AUTH_METHOD: trust
+
+  nginx:
+      container_name: lara-nginx
+      image: nginx:alpine
+      working_dir: /var/www/html
+      restart: unless-stopped
+      tty: true
+      depends_on:
+        - app
+      ports:
+        - "80:80"
+        - "443:443"
+      volumes:
+        - ./:/var/www/html
+        - ./nginx:/etc/nginx/conf.d
+      networks:
+        - mynet
+
+#Docker Networks
+networks:
+  mynet:
+    driver: bridge
